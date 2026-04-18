@@ -215,6 +215,9 @@ services:
       - grafana
       - homepage
       - authelia
+      - vaultwarden
+      - immich_server
+
   vaultwarden:
     image: vaultwarden/server:latest
     container_name: vaultwarden
@@ -245,6 +248,7 @@ services:
     depends_on:
       - immich-postgres
       - immich-redis
+      - immich_machine_learning
 
   immich-postgres:
     image: tensorchord/pgvecto-rs:pg14-v0.2.0
@@ -263,5 +267,20 @@ services:
     image: redis:alpine
     container_name: immich_redis
     restart: unless-stopped
+    networks:
+      - gawleycorp
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflared
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
+    networks:
+      - gawleycorp
+  immich-machine-learning:
+    image: ghcr.io/immich-app/immich-machine-learning:release
+    container_name: immich_machine_learning
+    restart: unless-stopped
+    volumes:
+      - ./data/immich-ml:/cache
     networks:
       - gawleycorp
