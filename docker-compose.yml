@@ -32,6 +32,11 @@ services:
       - LLDAP_HTTP_URL=https://home.gawley.net
     networks:
       - gawleycorp
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:17170"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
   mariadb:
     image: mariadb:11
     container_name: mariadb
@@ -45,6 +50,11 @@ services:
       - MYSQL_PASSWORD=${MARIADB_ROUNDCUBE_PASSWORD}
     networks:
       - gawleycorp
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
   prosody:
     image: prosody/prosody:0.12
     container_name: prosody
@@ -109,8 +119,10 @@ services:
     networks:
       - gawleycorp
     depends_on:
-      - mariadb
-      - mailserver
+      mariadb:
+        condition: service_healthy
+      mailserver:
+        condition: service_started
   prometheus:
     image: prom/prometheus:latest
     container_name: prometheus
@@ -185,8 +197,10 @@ services:
     networks:
       - gawleycorp
     depends_on:
-      - redis
-      - lldap
+      redis:
+        condition: service_started
+      lldap:
+        condition: service_healthy
   homepage:
     image: ghcr.io/gethomepage/homepage:latest
     container_name: homepage
