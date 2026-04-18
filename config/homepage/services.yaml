@@ -1,0 +1,22 @@
+- Family:
+    - Mail:
+        href: https://mail.gawley.net
+        icon: roundcube.png
+        description: Family Email
+    - Chat:
+        href: https://chat.gawley.net
+        icon: xmpp.png
+        description: Family Chat
+    - Photos:
+        href: https://photos.gawley.net
+        icon: immich.png
+        description: Family Photos
+    - Passwords:
+        href: https://vault.gawley.net
+        icon: vaultwarden.png
+        description: Password Manager
+- Admin:
+    - Grafana:
+        href: https://grafana.gawley.net
+        icon: grafana.png
+        description: Monitoring
