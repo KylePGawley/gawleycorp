@@ -12,6 +12,8 @@ volumes:
   roundcube_data:
   prometheus_data:
   grafana_data:
+  immich_db_data:
+  vaultwarden_data:
 
 services:
   lldap:
@@ -213,3 +215,53 @@ services:
       - grafana
       - homepage
       - authelia
+  vaultwarden:
+    image: vaultwarden/server:latest
+    container_name: vaultwarden
+    restart: unless-stopped
+    volumes:
+      - ./data/vaultwarden:/data
+    environment:
+      - DOMAIN=https://vault.gawley.net
+      - SIGNUPS_ALLOWED=false
+      - ADMIN_TOKEN=${VAULTWARDEN_ADMIN_TOKEN}
+    networks:
+      - gawleycorp
+
+  immich-server:
+    image: ghcr.io/immich-app/immich-server:release
+    container_name: immich_server
+    restart: unless-stopped
+    volumes:
+      - ./data/immich:/usr/src/app/upload
+    environment:
+      - DB_HOSTNAME=immich-postgres
+      - DB_USERNAME=immich
+      - DB_PASSWORD=${IMMICH_DB_PASSWORD}
+      - DB_DATABASE_NAME=immich
+      - REDIS_HOSTNAME=immich-redis
+    networks:
+      - gawleycorp
+    depends_on:
+      - immich-postgres
+      - immich-redis
+
+  immich-postgres:
+    image: tensorchord/pgvecto-rs:pg14-v0.2.0
+    container_name: immich_postgres
+    restart: unless-stopped
+    volumes:
+      - immich_db_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=immich
+      - POSTGRES_PASSWORD=${IMMICH_DB_PASSWORD}
+      - POSTGRES_DB=immich
+    networks:
+      - gawleycorp
+
+  immich-redis:
+    image: redis:alpine
+    container_name: immich_redis
+    restart: unless-stopped
+    networks:
+      - gawleycorp
