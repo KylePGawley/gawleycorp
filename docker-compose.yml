@@ -51,12 +51,13 @@ services:
     networks:
       - gawleycorp
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: ["CMD-SHELL", "mariadb-admin ping -h localhost --silent"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 30s
   prosody:
-    image: prosody/prosody:0.12
+    image: prosodyim/prosody:13.0
     container_name: prosody
     restart: unless-stopped
     ports:
@@ -67,6 +68,8 @@ services:
     volumes:
       - prosody_data:/var/lib/prosody
       - ./config/prosody:/etc/prosody/conf.d
+      - ./config/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./config/nginx/html:/usr/share/nginx/html
     environment:
       - PROSODY_ADMINS=kgawley@gawley.net
     networks:
@@ -86,8 +89,8 @@ services:
       - mail_data:/var/mail
       - ./config/mailserver:/tmp/docker-mailserver
     environment:
-      - ENABLE_LDAP=1
-      - LDAP_SERVER_HOST=lldap
+      - ACCOUNT_PROVISIONER=LDAP
+      - LDAP_SERVER_HOST=ldap://lldap:3890
       - LDAP_SEARCH_BASE=ou=people,dc=gawley,dc=net
       - LDAP_BIND_DN=uid=admin,ou=people,dc=gawley,dc=net
       - LDAP_BIND_PW=${LLDAP_ADMIN_PASS}
@@ -95,6 +98,7 @@ services:
       - DOVECOT_PASS_FILTER=(&(uid=%u)(objectClass=inetOrgPerson))
       - POSTMASTER_ADDRESS=admin@gawley.net
       - OVERRIDE_HOSTNAME=mail.gawley.net
+
     cap_add:
       - NET_ADMIN
     networks:
@@ -155,28 +159,28 @@ services:
     volumes:
       - grafana_data:/var/lib/grafana
     environment:
-      - GF_SERVER_ROOT_URL=https://home.gawley.net/monitoring/
-      - GF_SERVER_SERVE_FROM_SUB_PATH=true
+      - GF_SERVER_ROOT_URL=https://grafana.gawley.net
+      - GF_SERVER_SERVE_FROM_SUB_PATH=false
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
     networks:
       - gawleycorp
     depends_on:
       - prometheus
-  samba:
-    image: servercontainers/samba:latest
-    container_name: samba
-    restart: unless-stopped
-    ports:
-      - "445:445"
-      - "139:139"
-    volumes:
-      - ./config/samba/smb.conf:/etc/samba/smb.conf
-      - /srv/shares/gawleycorp:/shares/gawleycorp
-    environment:
-      - SAMBA_WORKGROUP=GAWLEYCORP
-      - SAMBA_SERVER_STRING=Gawleycorp File Server
-    networks:
-      - gawleycorp 
+  # samba:
+  #   image: servercontainers/samba:latest
+  #   container_name: samba
+  #   restart: unless-stopped
+  #   ports:
+  #     - "445:445"
+  #     - "139:139"
+  #   volumes:
+  #     - ./config/samba/smb.conf:/etc/samba/smb.conf
+  #     - /srv/shares/gawleycorp:/shares/gawleycorp
+  #   environment:
+  #     - SAMBA_WORKGROUP=GAWLEYCORP
+  #     - SAMBA_SERVER_STRING=Gawleycorp File Server
+  #   networks:
+  #     - gawleycorp 
   redis:
     image: redis:alpine
     container_name: redis
@@ -194,6 +198,7 @@ services:
       - AUTHELIA_JWT_SECRET=${AUTHELIA_JWT_SECRET}
       - AUTHELIA_SESSION_SECRET=${AUTHELIA_SESSION_SECRET}
       - AUTHELIA_STORAGE_ENCRYPTION_KEY=${AUTHELIA_ENCRYPTION_KEY}
+      - AUTHELIA_AUTHENTICATION_BACKEND_LDAP_PASSWORD=${LLDAP_ADMIN_PASS}
     networks:
       - gawleycorp
     depends_on:
@@ -207,6 +212,8 @@ services:
     restart: unless-stopped
     volumes:
       - ./config/homepage:/app/config
+    environment:
+      - HOMEPAGE_ALLOWED_HOSTS=home.gawley.net
     networks:
       - gawleycorp
   nginx:
@@ -228,7 +235,7 @@ services:
       - homepage
       - authelia
       - vaultwarden
-      - immich_server
+      - immich-server
 
   vaultwarden:
     image: vaultwarden/server:latest
@@ -260,7 +267,7 @@ services:
     depends_on:
       - immich-postgres
       - immich-redis
-      - immich_machine_learning
+      - immich-machine-learning
 
   immich-postgres:
     image: tensorchord/pgvecto-rs:pg14-v0.2.0
@@ -281,13 +288,13 @@ services:
     restart: unless-stopped
     networks:
       - gawleycorp
-  cloudflared:
-    image: cloudflare/cloudflared:latest
-    container_name: cloudflared
-    restart: unless-stopped
-    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
-    networks:
-      - gawleycorp
+  # cloudflared:
+  #   image: cloudflare/cloudflared:latest
+  #   container_name: cloudflared
+  #   restart: unless-stopped
+  #   command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
+  #   networks:
+  #     - gawleycorp
   immich-machine-learning:
     image: ghcr.io/immich-app/immich-machine-learning:release
     container_name: immich_machine_learning

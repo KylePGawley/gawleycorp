@@ -1,38 +1,39 @@
 ---
 theme: dark
-jwt_secret: ${AUTHELIA_JWT_SECRET}
+
+identity_validation:
+  reset_password:
+    jwt_secret: ${AUTHELIA_JWT_SECRET}
 
 server:
-  host: 0.0.0.0
-  port: 9091
+  address: tcp://0.0.0.0:9091
 
 log:
   level: info
 
 authentication_backend:
   ldap:
-    implementation: custom
-    url: ldap://lldap:3890
+    address: ldap://lldap:3890
     base_dn: dc=gawley,dc=net
-    username_attribute: uid
+    attributes:
+      username: uid
+      mail: mail
+      display_name: displayName
+      group_name: cn
     additional_users_dn: ou=people
-    users_filter: (&(uid={input})(objectClass=inetOrgPerson))
+    users_filter: (&({username_attribute}={input})(objectClass=inetOrgPerson))
     additional_groups_dn: ou=groups
     groups_filter: (member={dn})
-    group_name_attribute: cn
-    mail_attribute: mail
-    display_name_attribute: displayName
     user: uid=admin,ou=people,dc=gawley,dc=net
-    password: ${LLDAP_ADMIN_PASS}
 
 session:
   secret: ${AUTHELIA_SESSION_SECRET}
   expiration: 3600
   inactivity: 300
-  domain: gawley.net
-  redis:
-    host: redis
-    port: 6379
+  cookies:
+    - domain: gawley.net
+      authelia_url: https://auth.gawley.net
+      default_redirection_url: https://home.gawley.net
 
 storage:
   encryption_key: ${AUTHELIA_ENCRYPTION_KEY}
@@ -44,16 +45,8 @@ notifier:
     filename: /config/notification.txt
 
 access_control:
-  default_policy: deny
+  default_policy: one_factor
   rules:
-    - domain: home.gawley.net
-      policy: one_factor
-    - domain: mail.gawley.net
-      policy: one_factor
-    - domain: chat.gawley.net
-      policy: one_factor
-    - domain: photos.gawley.net
-      policy: one_factor
     - domain: vault.gawley.net
       policy: two_factor
       subject: "group:admins"

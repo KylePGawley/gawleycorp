@@ -1,10 +1,26 @@
 -- Gawleycorp Prosody Configuration
+
+-- Global settings (must be before VirtualHost)
+http_interfaces = { "*" }
+https_interfaces = { "*" }
+http_ports = { 5280 }
+https_ports = { 5281 }
+cross_domain_websocket = true
+consider_websocket_secure = true
+c2s_require_encryption = false
+s2s_require_encryption = false
+http_host = "prosody"
+
+-- Logging
+log = {
+    { levels = { min = "info" }, to = "console" };
+}
+
 -- Domain
 VirtualHost "gawley.net"
 
 -- Authentication via LLDAP
 authentication = "ldap"
-
 ldap_base = "ou=people,dc=gawley,dc=net"
 ldap_server = "lldap"
 ldap_rootdn = "uid=admin,ou=people,dc=gawley,dc=net"
@@ -33,27 +49,7 @@ modules_enabled = {
     "admin_adhoc";
     "websocket";
     "http";
-}
-
--- HTTP/WebSocket
-http_interfaces = { "*" }
-https_interfaces = { "*" }
-http_ports = { 5280 }
-https_ports = { 5281 }
-
-cross_domain_websocket = true
-consider_websocket_secure = true
-
--- TLS
-ssl = {
-    certificate = "/etc/prosody/certs/gawley.net.crt";
-    key = "/etc/prosody/certs/gawley.net.key";
-}
-
--- Logging
-log = {
-    debug = "/var/log/prosody/prosody.log";
-    error = "/var/log/prosody/prosody.err";
+    "auth_ldap";
 }
 
 -- MUC (group chat)
