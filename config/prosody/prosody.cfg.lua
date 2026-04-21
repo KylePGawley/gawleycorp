@@ -22,7 +22,7 @@ VirtualHost "gawley.net"
 -- Authentication via LLDAP
 authentication = "ldap"
 ldap_base = "ou=people,dc=gawley,dc=net"
-ldap_server = "lldap"
+ldap_server = "lldap:3890"
 ldap_rootdn = "uid=admin,ou=people,dc=gawley,dc=net"
 ldap_password = os.getenv("LLDAP_ADMIN_PASS")
 ldap_filter = "(uid=$user)"
@@ -30,22 +30,15 @@ ldap_mode = "bind"
 
 -- Modules
 modules_enabled = {
-    "roster";
+   "roster";
     "saslauth";
-    "tls";
     "dialback";
     "disco";
-    "carbons";
-    "pep";
     "private";
-    "blocklist";
-    "vcard4";
-    "vcard_legacy";
     "version";
     "uptime";
     "time";
     "ping";
-    "register";
     "admin_adhoc";
     "websocket";
     "http";

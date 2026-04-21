@@ -3,17 +3,18 @@
 <head>
     <meta charset="utf-8">
     <title>Gawleycorp Chat</title>
-    <link rel="stylesheet" href="https://cdn.conversejs.org/12.0.0/dist/converse.min.css">
+    <link rel="stylesheet" href="https://cdn.conversejs.org/10.1.6/dist/converse.min.css">
 </head>
 <body>
-    <script src="https://cdn.conversejs.org/12.0.0/dist/converse.min.js"></script>
+    <script src="https://cdn.conversejs.org/10.1.6/dist/converse.min.js"></script>
     <script>
         converse.initialize({
             websocket_url: 'ws://chat.gawley.net/xmpp-websocket',
             discover_connection_methods: false,
             i18n: 'en',
             show_controlbox_by_default: true,
-            roster_groups: true
+            roster_groups: true,
+            assets_path: 'https://cdn.conversejs.org/10.1.6/dist/',
         });
     </script>
 </body>

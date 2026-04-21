@@ -57,7 +57,9 @@ services:
       retries: 10
       start_period: 30s
   prosody:
-    image: prosodyim/prosody:13.0
+    build:
+      context: .
+      dockerfile: Dockerfile.prosody
     container_name: prosody
     restart: unless-stopped
     ports:
@@ -67,11 +69,9 @@ services:
       - "5281:5281"
     volumes:
       - prosody_data:/var/lib/prosody
-      - ./config/prosody:/etc/prosody/conf.d
-      - ./config/nginx/nginx.conf:/etc/nginx/nginx.conf
-      - ./config/nginx/html:/usr/share/nginx/html
     environment:
       - PROSODY_ADMINS=kgawley@gawley.net
+      - LLDAP_ADMIN_PASS=${LLDAP_ADMIN_PASS}
     networks:
       - gawleycorp
   mailserver:
@@ -217,7 +217,9 @@ services:
     networks:
       - gawleycorp
   nginx:
-    image: nginx:alpine
+    build:
+      context: .
+      dockerfile: Dockerfile.nginx
     container_name: nginx
     restart: unless-stopped
     ports:
